@@ -29,7 +29,7 @@ defmodule WorkerTest do
 
   test "it handles send message call" do
     clients = %{
-      1 => recipient = %Client{id: 1, pid: self(), name: "Bob"},
+      1 => _recipient = %Client{id: 1, pid: self(), name: "Bob"},
       2 => sender = %Client{id: 2, pid: 123, name: "Alex"}
     }
 
@@ -44,7 +44,7 @@ defmodule WorkerTest do
                state
              )
 
-    assert %RoomInfo{messages: [message]} = new_state.rooms[room.id]
+    assert %RoomInfo{messages: [^message]} = new_state.rooms[room.id]
     assert_receive %Events.MessageReceived{}
   end
 end

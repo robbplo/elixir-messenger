@@ -53,9 +53,7 @@ defmodule Worker do
 
     room.clients
     |> Map.values()
-    |> IO.inspect()
     |> Enum.reject(&(&1.id == sender_id))
-    |> IO.inspect()
     |> Enum.each(&Process.send(&1.pid, %Events.MessageReceived{message: message}, []))
 
     # TODO: send message event to others in room
