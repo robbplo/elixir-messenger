@@ -29,17 +29,22 @@ defmodule WorkerTest do
 
   test "it handles send message call" do
     clients = %{
-      1 => recipient = %Client{pid: self(), name: "Bob"},
-      2 => sender = %Client{pid: 123, name: "Alex"}
+      1 => recipient = %Client{id: 1, pid: self(), name: "Bob"},
+      2 => sender = %Client{id: 2, pid: 123, name: "Alex"}
     }
 
     room = %RoomInfo{id: 1, clients: clients}
     state = %WorkerState{clients: clients, rooms: %{room.id => room}}
-    message = {"Hello World!", sender.id, room.id}
+    message = %Message{body: "Hello World!", sender_id: sender.id}
 
     assert {:reply, :ok, new_state} =
-             Worker.handle_call({:send_message, message}, sender.pid, state)
+             Worker.handle_call(
+               {:send_message, {message.body, message.sender_id, room.id}},
+               sender.pid,
+               state
+             )
 
     assert %RoomInfo{messages: [message]} = new_state.rooms[room.id]
+    assert_receive %Events.MessageReceived{}
   end
 end

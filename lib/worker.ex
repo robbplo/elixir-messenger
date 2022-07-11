@@ -1,16 +1,13 @@
 defmodule Worker do
   use GenServer
 
-  # Callbacks
-
   @impl true
   def init(_stack) do
     {:ok, %WorkerState{rooms: %{1 => %RoomInfo{id: 1}}}}
   end
 
-  @impl true
-  def handle_call(:pop, _from, _state) do
-    # {:reply, head, tail}
+  def start_link() do
+    {:ok, _pid} = GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   @impl true
@@ -48,17 +45,21 @@ defmodule Worker do
   end
 
   @impl true
-  def handle_call({:send_message, {_body, _sender_id, room_id} = message}, _, state) do
+  def handle_call({:send_message, {body, sender_id, room_id}}, _, state) do
     room = state.rooms[room_id]
+    message = %Message{body: body, sender_id: sender_id}
     new_room = Map.put(room, :messages, [message | room.messages])
     new_state = %WorkerState{state | rooms: Map.put(state.rooms, room_id, new_room)}
-    # TODO: use message struct
+
+    room.clients
+    |> Map.values()
+    |> IO.inspect()
+    |> Enum.reject(&(&1.id == sender_id))
+    |> IO.inspect()
+    |> Enum.each(&Process.send(&1.pid, %Events.MessageReceived{message: message}, []))
+
     # TODO: send message event to others in room
 
     {:reply, :ok, new_state}
-  end
-
-  def start_link() do
-    {:ok, _pid} = GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 end
