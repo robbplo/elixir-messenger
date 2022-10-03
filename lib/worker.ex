@@ -41,7 +41,9 @@ defmodule Worker do
 
   @impl true
   def handle_call({:get_room_info, room_id}, _, state) do
-    {:reply, Map.get(state.rooms, room_id), state}
+    room_info = Map.get(state.rooms, room_id)
+
+    {:reply, room_info, state}
   end
 
   @impl true
@@ -55,8 +57,6 @@ defmodule Worker do
     |> Map.values()
     |> Enum.reject(&(&1.id == sender_id))
     |> Enum.each(&Process.send(&1.pid, %Events.MessageReceived{message: message}, []))
-
-    # TODO: send message event to others in room
 
     {:reply, :ok, new_state}
   end
